@@ -1,0 +1,191 @@
+<html>
+<head>
+	<head>
+  		<link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'  type='text/css'>
+    	<link rel="stylesheet" type="text/css" href="kstyle.css"/>
+	</head>
+</head>
+<body>
+	<div class = "input">
+		<h1>What am i typing?</h1>
+		<h2>Enter your commands:</h2>	
+		Commands: <input type="text" name="intext" id="intext" size="50px">
+		<input type = "submit" value="Validate" onClick="validate()">
+		<h3>Output:</h3>
+		<div id="output">
+		</div>
+		<div id="outputByArray">
+		</div>
+	</div>
+
+	<script>
+
+	/*
+
+	//i think i need to map this out. think.
+
+	//suggestions are a feature
+	
+	Thing is they dont have to be split by spaces. if they are then it is kind of easy. but i want to complicate it. think.
+
+	Types: 
+	$varaible -> starts with $ and is alphanumeric and underscore
+	"string" -> is contained by ""
+	error -> neither of the two
+
+
+	Test cases:
+	Single:
+	$hello -> $hello, variable
+	$$hello -> $$hello, error
+
+	"hey" -> "hey" string
+	"$hey" -> "$hey" string
+	""what" -> ""what" string
+	"what -> "what error
+	what" -> what" error
+
+	test -> error
+
+	More than one:
+	$hello $what -> "$hello" variable, "$what" variable
+	$hello $hes -> "$hello" variable, "hes" variable
+	$wat focus -> "$wat" variable, "focus" error
+
+	Special Cases:
+	"hello"$what -> "hello" string, "$what" variable
+	$hey$bear -> "$hey" varialbe, "$bear" varialbe
+	"what""the" -> "what" string, "the" string
+
+	//what if i did parsed it as a character array so that i can count the "" open and closed quotations....
+
+	//spaces within the quotation marks too
+
+	//this is not being done the right way. there are too many if statements. im sure it can be done in a better way. will need to think about it.
+
+	*/
+
+		function validate(){
+			var input = document.getElementById("intext").value;
+			var output= parse(input);
+			var outputArray = pByArray(input);
+			//for each object in it output a string. depending on what itis
+			var outputText = "";
+			//console.log(outputArray[0].str);
+			for(var i=0; i<outputArray.length; i++){
+				outputText = outputText + outputArray[i].str + " is a " + outputArray[i].strType + "</br>";
+			}
+			document.getElementById("output").innerHTML = output.toString();
+			//document.getElementById("outputByArray").innerHTML = outputArray.toString();
+			document.getElementById("outputByArray").innerHTML = outputText;
+		}
+
+		function parse(thestring){
+			var outputa = thestring.split(/[\s]/);
+			for(var i=0; i<outputa.length; i++){
+				var type = "error";
+				if(outputa[i].startsWith("$") && outputa[i].match(/^[$][a-z0-9_]+$/i)){
+					type = "variable";
+				}else if(outputa[i].startsWith("\"") && outputa[i].endsWith("\"")){
+					type = "string";
+				}
+				outputa[i] = outputa[i] + " " + type + " ";
+			}
+			return outputa;
+		}
+
+		function pByArray(thestring){
+			console.log("reach here?");
+			var outputa = thestring.split('');
+			console.log(outputa);
+			var anArray = [];
+			var type = "error";
+			var startQuote = false;
+			var startVariable = false;
+			var startError = false;
+			var startIndexStr = 0;
+			var endIndexStr = 0;
+			var startIndexVar = 0;
+			var endIndexVar = 0;
+			var startIndexErr = 0;
+			var endIndexErr = 0;
+			//iterate through it looking for conditions.
+			for(var i=0; i<outputa.length; i++){
+				console.log(outputa[i]);
+				console.log("startError has the value: " + startError);
+				if(outputa[i]=="\""){
+					console.log("found quote");
+				}
+				//it all depends on what it starts and ends with and stuff... think. also will the object even work?
+				//sp this can contain spaces... now to add variable functionality.
+
+				//variables can only contain alphanumeric and underscores. and only have one instance on $ i think. or count that as the next thing. think. Still need to do this.
+				//lets add varialbes now.
+
+				//test the object first. ok works i think.
+				//a varialbe starts with $.
+
+				//but what does it look out for first?
+
+				if(startVariable==false && startQuote==false && outputa[i]=="$"){
+					startVariable = true;
+					startIndexVar = i;
+
+
+
+				}else if(startVariable==true && (outputa[i]==" " || i==outputa.length-1 || outputa[i]=="\"")){
+					if(outputa[i]=="\""){
+						i--;
+					}
+					console.log("found var");
+					startVariable = false;
+					endIndexVar = i;
+					var temporary = new anEntry(outputa.slice(startIndexVar, endIndexVar+1).join(""), "variable");
+					console.log(temporary.str + " is a " + temporary.strType);
+					anArray.push(temporary);
+
+				}else if(startQuote==false && outputa[i]=="\""){
+					console.log("found open");
+					startQuote = true;
+					startIndexStr = i;
+				}else if(startQuote==true && outputa[i]=="\""){
+					console.log("found close");
+					startQuote = false;
+					endIndexStr = i;
+					var temporary = new anEntry(outputa.slice(startIndexStr, endIndexStr+1).join(""), "string");
+					console.log(temporary.str + " is a " + temporary.strType);
+					anArray.push(temporary);
+					//anArray.push("test from " + startIndex + " to " + endIndex);
+				}else if(startError==false && startQuote==false && startVariable==false && outputa[i]!=" "){
+					console.log("ERROR STARTS HERE");
+					console.log(outputa[i] + "here");
+					startError = true;
+					startIndexErr = i;
+
+					//its an error right..... i dunno. this is bad code. can be improved alot.
+					//that i+1 is bad.. need to fix
+				}else if(startError == true && (outputa[i]=="\"" || outputa[i]==" " || outputa[i+1]=="$" || i==outputa.length-1)){
+					console.log("ERROR ENDS HERE");
+
+					startError = false;
+					endIndexErr = i;
+					var temporary = new anEntry(outputa.slice(startIndexErr, endIndexErr+1).join(""), "error");
+					console.log(temporary.str + " is an " + temporary.strType);
+					anArray.push(temporary);
+
+				}
+
+			}
+			return anArray;
+		}
+
+		function anEntry(str, strType){
+			this.str = str;
+			this.strType = strType;
+		}
+
+	</script>
+
+
+</body>
+</html>
